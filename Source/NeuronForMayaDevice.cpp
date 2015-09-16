@@ -27,6 +27,9 @@
 #include <maya/MDataBlock.h>
 #include <maya/MFnNumericAttribute.h>
 #include <maya/MPxThreadedDeviceNode.h>
+#include <maya/MFnTypedAttribute.h>
+#include <maya/MFnStringData.h>
+
 #include "NeuronForMayaDevice.h"
 
 
@@ -34,6 +37,10 @@
 
 
 MTypeId NeuronForMayaDevice::id( 0x00081051 );
+
+MObject NeuronForMayaDevice::inputIp;
+MObject NeuronForMayaDevice::inputPort;
+
 MObject NeuronForMayaDevice::outputTranslate;
 MObject NeuronForMayaDevice::outputTranslateX;
 MObject NeuronForMayaDevice::outputTranslateY;
@@ -207,32 +214,60 @@ MStatus NeuronForMayaDevice::initialize()
 	//ADD_ATTRIBUTE(outputTranslate);
 
 
+    MFnTypedAttribute tAttr;
+
+    MFnStringData fnStringIp;
+    MObject stringIp = fnStringIp.create("127.0.0.1");
+    inputIp = tAttr.create("inputIp", "ii", MFnData::kString, stringIp, &status);
+ 	MCHECKERROR(status, "create input Ip");
+    tAttr.setWritable(true);
+    ADD_ATTRIBUTE(inputIp)
+
+
+    MFnStringData fnStringPort;
+    MObject stringPort = fnStringPort.create("127.0.0.1");
+    inputPort = tAttr.create("inputPort", "ip", MFnData::kString, stringPort, &status);
+ 	MCHECKERROR(status, "create input Port");
+    tAttr.setWritable(true);
+    ADD_ATTRIBUTE(inputPort)
+
+
     status = createOculusAttribute(outputTranslate, outputTranslateX, outputTranslateY, outputTranslateZ, "outputTranslate", "ot", true );
 
     ATTRIBUTE_AFFECTS( live, outputTranslate);
     ATTRIBUTE_AFFECTS( frameRate, outputTranslate);
+    ATTRIBUTE_AFFECTS( inputIp, outputTranslate);
+    ATTRIBUTE_AFFECTS( inputPort, outputTranslate);
 
 
     status = createOculusAttribute(outputLeftCameraPosition, outputLeftCameraPositionX, outputLeftCameraPositionY, outputLeftCameraPositionZ, "outputLeftCameraPosition", "olcp" );
 
     ATTRIBUTE_AFFECTS( live, outputLeftCameraPosition);
     ATTRIBUTE_AFFECTS( frameRate, outputLeftCameraPosition);
+    ATTRIBUTE_AFFECTS( inputIp, outputLeftCameraPosition);
+    ATTRIBUTE_AFFECTS( inputPort, outputLeftCameraPosition);
 
     status = createOculusAttribute(outputLeftCameraRotation, outputLeftCameraRotationX, outputLeftCameraRotationY, outputLeftCameraRotationZ, "outputLeftCameraRotation", "olcr" );
 
     ATTRIBUTE_AFFECTS( live, outputLeftCameraRotation);
     ATTRIBUTE_AFFECTS( frameRate, outputLeftCameraRotation);
+    ATTRIBUTE_AFFECTS( inputIp, outputLeftCameraRotation);
+    ATTRIBUTE_AFFECTS( inputPort, outputLeftCameraRotation);
 
 
     status = createOculusAttribute(outputRightCameraPosition, outputRightCameraPositionX, outputRightCameraPositionY, outputRightCameraPositionZ, "outputRightCameraPosition", "orcp" );
 
     ATTRIBUTE_AFFECTS( live, outputRightCameraPosition);
     ATTRIBUTE_AFFECTS( frameRate, outputRightCameraPosition);
+    ATTRIBUTE_AFFECTS( inputIp, outputRightCameraPosition);
+    ATTRIBUTE_AFFECTS( inputPort, outputRightCameraPosition);
 
     status = createOculusAttribute(outputRightCameraRotation, outputRightCameraRotationX, outputRightCameraRotationY, outputRightCameraRotationZ, "outputRightCameraRotation", "orcr" );
 
     ATTRIBUTE_AFFECTS( live, outputRightCameraRotation);
     ATTRIBUTE_AFFECTS( frameRate, outputRightCameraRotation);
+    ATTRIBUTE_AFFECTS( inputIp, outputRightCameraRotation);
+    ATTRIBUTE_AFFECTS( inputPort, outputRightCameraRotation);
 
 
     ATTRIBUTE_AFFECTS( outputTranslate, outputLeftCameraPosition);
@@ -319,3 +354,23 @@ MStatus NeuronForMayaDevice::compute( const MPlug& plug, MDataBlock& block )
 
 
 
+void 
+NeuronForMayaDevice::myCommandDataReceived(void* customedObj, SOCKET_REF sender, CommandPack* pack, void* data)
+{
+    MGlobal::displayInfo("myCommandDataReceived");
+}
+
+
+void 
+NeuronForMayaDevice::myFrameDataReceived(void* customedObj, SOCKET_REF sender, BvhDataHeaderEx* header, float* data)
+{
+    MGlobal::displayInfo("myFrameDataReceived");
+
+}
+
+void
+NeuronForMayaDevice::mySocketStatusChanged(void* customedObj, SOCKET_REF sender, SocketStatus status, char* message)
+{
+    MGlobal::displayInfo("mySocketStatusChanged");
+
+}

@@ -1,9 +1,10 @@
 #pragma once
 
+#include <windows.h>
 #include "maya/MPxThreadedDeviceNode.h"
-//#include "neuronForMayaAdapter.h"
 #include "maya/MDagPath.h"
 #include "maya/MFnCamera.h"
+#include <NeuronDataReader.h>
 
 
 class NeuronForMayaDevice : public MPxThreadedDeviceNode
@@ -21,7 +22,17 @@ public:
     static void*		creator();
     static MStatus		initialize();
 
+
+    // 3 callbacks to fetch data from Neuron
+    static void myFrameDataReceived(void* customedObj, SOCKET_REF sender, BvhDataHeaderEx* header, float* data); 
+    static void myCommandDataReceived(void* customedObj, SOCKET_REF sender, CommandPack* pack, void* data); 
+    static void mySocketStatusChanged(void* customedObj, SOCKET_REF sender, SocketStatus status, char* message); 
+
+
 public:
+
+    static MObject      inputIp;
+    static MObject      inputPort;
 
     static MObject		outputTranslate;
     static MObject 		outputTranslateX;
