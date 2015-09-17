@@ -29,6 +29,7 @@
 #include <maya/MPxThreadedDeviceNode.h>
 #include <maya/MFnTypedAttribute.h>
 #include <maya/MFnStringData.h>
+#include <maya/MArrayDataBuilder.h>
 
 #include "NeuronForMayaDevice.h"
 #include "NeuronForMayaCmd.h"
@@ -46,30 +47,10 @@ MObject NeuronForMayaDevice::inputIp;
 MObject NeuronForMayaDevice::inputPort;
 
 MObject NeuronForMayaDevice::outputTranslate;
-MObject NeuronForMayaDevice::outputTranslateX;
-MObject NeuronForMayaDevice::outputTranslateY;
-MObject NeuronForMayaDevice::outputTranslateZ;
-
-MObject NeuronForMayaDevice::outputLeftCameraPosition;
-MObject NeuronForMayaDevice::outputLeftCameraPositionX;
-MObject NeuronForMayaDevice::outputLeftCameraPositionY;
-MObject NeuronForMayaDevice::outputLeftCameraPositionZ;
+MObject NeuronForMayaDevice::outputTranslations;
+MObject NeuronForMayaDevice::outputRotations;
 
 
-MObject NeuronForMayaDevice::outputLeftCameraRotation;
-MObject NeuronForMayaDevice::outputLeftCameraRotationX;
-MObject NeuronForMayaDevice::outputLeftCameraRotationY;
-MObject NeuronForMayaDevice::outputLeftCameraRotationZ;
-
-MObject NeuronForMayaDevice::outputRightCameraPosition;
-MObject NeuronForMayaDevice::outputRightCameraPositionX;
-MObject NeuronForMayaDevice::outputRightCameraPositionY;
-MObject NeuronForMayaDevice::outputRightCameraPositionZ;
-
-MObject NeuronForMayaDevice::outputRightCameraRotation;
-MObject NeuronForMayaDevice::outputRightCameraRotationX;
-MObject NeuronForMayaDevice::outputRightCameraRotationY;
-MObject NeuronForMayaDevice::outputRightCameraRotationZ;
 
 NeuronForMayaDevice::NeuronForMayaDevice() 
 {}
@@ -169,47 +150,12 @@ void* NeuronForMayaDevice::creator()
 }
 
 
-MStatus NeuronForMayaDevice::createOculusAttribute( MObject& obj, MObject& objX, MObject& objY, MObject& objZ, const MString& longName, const MString& shortName, bool hidden )
-{
-    MStatus status;
-    MFnNumericAttribute numAttr;
-
-    objX = numAttr.create( longName+"X", shortName+"X", MFnNumericData::kDouble, 0.0, &status);
-    MCHECKERROR(status, "create " + longName+"X");
-    objY = numAttr.create( longName+"Y", shortName+"Y", MFnNumericData::kDouble, 0.0, &status);
-    MCHECKERROR(status, "create " + longName+"Y");
-    objZ = numAttr.create( longName+"Z", shortName+"Z", MFnNumericData::kDouble, 0.0, &status);
-    MCHECKERROR(status, "create " + longName+"Z");
-
-    obj = numAttr.create(longName, shortName, objX, objY, objZ, &status);
-    MCHECKERROR(status, "create "+ longName);
-    numAttr.setHidden(hidden);
-
-    ADD_ATTRIBUTE(obj);
-
-    return MS::kSuccess;
-}
 
 
 MStatus NeuronForMayaDevice::initialize()
 {
 	MStatus status;
-	//MFnNumericAttribute numAttr;
-
-	//outputTranslateX = numAttr.create("outputTranslateX", "otx", MFnNumericData::kDouble, 0.0, &status);
-	//MCHECKERROR(status, "create outputTranslateX");
-	//outputTranslateY = numAttr.create("outputTranslateY", "oty", MFnNumericData::kDouble, 0.0, &status);
-	//MCHECKERROR(status, "create outputTranslateY");
-	//outputTranslateZ = numAttr.create("outputTranslateZ", "otz", MFnNumericData::kDouble, 0.0, &status);
-	//MCHECKERROR(status, "create outputTranslateZ");
-
- //   outputTranslate = numAttr.create("outputTranslate", "ot", outputTranslateX, outputTranslateY, 
-	//								 outputTranslateZ, &status);
-	//MCHECKERROR(status, "create outputTranslate");
-	//
-	//ADD_ATTRIBUTE(outputTranslate);
-
-
+	MFnNumericAttribute numAttr;
     MFnTypedAttribute tAttr;
 
     MFnStringData fnStringIp;
@@ -228,48 +174,43 @@ MStatus NeuronForMayaDevice::initialize()
     ADD_ATTRIBUTE(inputPort)
 
 
-    status = createOculusAttribute(outputTranslate, outputTranslateX, outputTranslateY, outputTranslateZ, "outputTranslate", "ot", true );
+	outputTranslate = numAttr.create("outputTranslate", "ot", MFnNumericData::k3Float, 0.0, &status);
+	MCHECKERROR(status, "create outputTranslate");
+	ADD_ATTRIBUTE(outputTranslate);
+
+
+    outputTranslations = numAttr.create("outputTranslations", "ots", MFnNumericData::k3Float, 0.0, &status);
+	MCHECKERROR(status, "create outputTranslations");
+    numAttr.setArray(true);
+    numAttr.setUsesArrayDataBuilder(true); 
+	ADD_ATTRIBUTE(outputTranslations);
+
+
+    outputRotations = numAttr.create("outputRotations", "ors", MFnNumericData::k3Float, 0.0, &status);
+	MCHECKERROR(status, "create outputRotations");
+    numAttr.setArray(true);
+    numAttr.setUsesArrayDataBuilder(true); 
+	ADD_ATTRIBUTE(outputRotations);
+
 
     ATTRIBUTE_AFFECTS( live, outputTranslate);
     ATTRIBUTE_AFFECTS( frameRate, outputTranslate);
     ATTRIBUTE_AFFECTS( inputIp, outputTranslate);
     ATTRIBUTE_AFFECTS( inputPort, outputTranslate);
 
+    ATTRIBUTE_AFFECTS( live, outputTranslations);
+    ATTRIBUTE_AFFECTS( frameRate, outputTranslations);
+    ATTRIBUTE_AFFECTS( inputIp, outputTranslations);
+    ATTRIBUTE_AFFECTS( inputPort, outputTranslations);
 
-    status = createOculusAttribute(outputLeftCameraPosition, outputLeftCameraPositionX, outputLeftCameraPositionY, outputLeftCameraPositionZ, "outputLeftCameraPosition", "olcp" );
+    ATTRIBUTE_AFFECTS( live, outputRotations);
+    ATTRIBUTE_AFFECTS( frameRate, outputRotations);
+    ATTRIBUTE_AFFECTS( inputIp, outputRotations);
+    ATTRIBUTE_AFFECTS( inputPort, outputRotations);
 
-    ATTRIBUTE_AFFECTS( live, outputLeftCameraPosition);
-    ATTRIBUTE_AFFECTS( frameRate, outputLeftCameraPosition);
-    ATTRIBUTE_AFFECTS( inputIp, outputLeftCameraPosition);
-    ATTRIBUTE_AFFECTS( inputPort, outputLeftCameraPosition);
+    ATTRIBUTE_AFFECTS( outputTranslate, outputTranslations);
+    ATTRIBUTE_AFFECTS( outputTranslate, outputRotations);
 
-    status = createOculusAttribute(outputLeftCameraRotation, outputLeftCameraRotationX, outputLeftCameraRotationY, outputLeftCameraRotationZ, "outputLeftCameraRotation", "olcr" );
-
-    ATTRIBUTE_AFFECTS( live, outputLeftCameraRotation);
-    ATTRIBUTE_AFFECTS( frameRate, outputLeftCameraRotation);
-    ATTRIBUTE_AFFECTS( inputIp, outputLeftCameraRotation);
-    ATTRIBUTE_AFFECTS( inputPort, outputLeftCameraRotation);
-
-
-    status = createOculusAttribute(outputRightCameraPosition, outputRightCameraPositionX, outputRightCameraPositionY, outputRightCameraPositionZ, "outputRightCameraPosition", "orcp" );
-
-    ATTRIBUTE_AFFECTS( live, outputRightCameraPosition);
-    ATTRIBUTE_AFFECTS( frameRate, outputRightCameraPosition);
-    ATTRIBUTE_AFFECTS( inputIp, outputRightCameraPosition);
-    ATTRIBUTE_AFFECTS( inputPort, outputRightCameraPosition);
-
-    status = createOculusAttribute(outputRightCameraRotation, outputRightCameraRotationX, outputRightCameraRotationY, outputRightCameraRotationZ, "outputRightCameraRotation", "orcr" );
-
-    ATTRIBUTE_AFFECTS( live, outputRightCameraRotation);
-    ATTRIBUTE_AFFECTS( frameRate, outputRightCameraRotation);
-    ATTRIBUTE_AFFECTS( inputIp, outputRightCameraRotation);
-    ATTRIBUTE_AFFECTS( inputPort, outputRightCameraRotation);
-
-
-    ATTRIBUTE_AFFECTS( outputTranslate, outputLeftCameraPosition);
-    ATTRIBUTE_AFFECTS( outputTranslate, outputLeftCameraRotation);
-    ATTRIBUTE_AFFECTS( outputTranslate, outputRightCameraPosition);
-    ATTRIBUTE_AFFECTS( outputTranslate, outputRightCameraRotation);
 
     return MS::kSuccess;
 }
@@ -278,12 +219,9 @@ MStatus NeuronForMayaDevice::initialize()
 MStatus NeuronForMayaDevice::compute( const MPlug& plug, MDataBlock& block )
 {
     MStatus status;
-    if( plug == outputTranslate || plug == outputTranslateX || plug == outputTranslateY || plug == outputTranslateZ 
-        || plug == outputLeftCameraPosition || plug == outputLeftCameraPositionX || plug == outputLeftCameraPositionY || plug == outputLeftCameraPositionZ
-        || plug == outputLeftCameraRotation || plug == outputLeftCameraRotationX || plug == outputLeftCameraRotationY || plug == outputLeftCameraRotationZ
-        || plug == outputRightCameraPosition || plug == outputRightCameraPositionX || plug == outputRightCameraPositionY || plug == outputRightCameraPositionZ
-        || plug == outputRightCameraRotation || plug == outputRightCameraRotationX || plug == outputRightCameraRotationY || plug == outputRightCameraRotationZ
-        )
+    if( plug == outputTranslate || plug.parent() == outputTranslate ||
+        plug == outputTranslations ||  plug.parent() == outputTranslations ||
+        plug == outputRotations || plug.parent() == outputRotations )
     {
         bLive = isLive();
 
@@ -291,49 +229,40 @@ MStatus NeuronForMayaDevice::compute( const MPlug& plug, MDataBlock& block )
         if ( popThreadData(buffer) )
         {
             FrameData* curData = reinterpret_cast<FrameData*>(buffer.ptr());
+            MArrayDataHandle translationsHandle = block.outputArrayValue( outputTranslations, &status );
+            MCHECKERROR(status, "Error in block.outputArrayValue for outputTranslations");
 
-            //int i = 0;
-            //MDataHandle outputLeftCameraPositionHandle = block.outputValue( outputLeftCameraPosition, &status );
-            //MCHECKERROR(status, "Error in block.outputValue for outputLeftCameraPosition");
+            MArrayDataBuilder translationsBuilder = translationsHandle.builder( &status );
+            MCHECKERROR(status, "Error in translationsBuilder = translationsHandle.builder.\n");
 
-            //double3& outputLeftCameraPosition = outputLeftCameraPositionHandle.asDouble3();
-            //outputLeftCameraPosition[0] = doubleData[i++];
-            //outputLeftCameraPosition[1] = doubleData[i++];
-            //outputLeftCameraPosition[2] = doubleData[i++];
+            MArrayDataHandle rotationsHandle = block.outputArrayValue( outputRotations, &status );
+            MCHECKERROR(status, "Error in block.outputArrayValue for outputRotations");
 
-            //MDataHandle outputLeftCameraRotationHandle = block.outputValue( outputLeftCameraRotation, &status );
-            //MCHECKERROR(status, "Error in block.outputValue for outputLeftCameraRotation");
+            MArrayDataBuilder rotationsBuilder = rotationsHandle.builder( &status );
+            MCHECKERROR(status, "Error in rotationsBuilder = rotationsHandle.builder.\n");
+ 
 
-            //double3& outputLeftCameraRotation = outputLeftCameraRotationHandle.asDouble3();
-            //outputLeftCameraRotation[0] = doubleData[i++];
-            //outputLeftCameraRotation[1] = doubleData[i++];
-            //outputLeftCameraRotation[2] = doubleData[i++];
+            for(UINT32 i=0; i< 60; ++i )
+            {
 
+                float3& translate = translationsBuilder.addElement(i, &status).asFloat3();
+                MCHECKERROR(status, "ERROR in translate = translationsBuilder.addElement.\n");
+                translate[0] = curData->data[i][0];
+                translate[1] = curData->data[i][1];
+                translate[2] = curData->data[i][2];
 
-            //MDataHandle outputRightCameraPositionHandle = block.outputValue( outputRightCameraPosition, &status );
-            //MCHECKERROR(status, "Error in block.outputValue for outputRightCameraPosition");
+                float3& rotate = rotationsBuilder.addElement(i, &status).asFloat3();
+                MCHECKERROR(status, "ERROR in translate = translationsBuilder.addElement.\n");
+                rotate[0] = curData->data[i][3];
+                rotate[1] = curData->data[i][4];
+                rotate[2] = curData->data[i][5];
 
-            //double3& outputRightCameraPosition = outputRightCameraPositionHandle.asDouble3();
-            //outputRightCameraPosition[0] = doubleData[i++];
-            //outputRightCameraPosition[1] = doubleData[i++];
-            //outputRightCameraPosition[2] = doubleData[i++];
+            }
+            status = translationsHandle.set(translationsBuilder);
+            MCHECKERROR(status, "set translationsBuilder failed\n");
 
-            //MDataHandle outputRightCameraRotationHandle = block.outputValue( outputRightCameraRotation, &status );
-            //MCHECKERROR(status, "Error in block.outputValue for outputRightCameraRotation");
-
-            //double3& outputRightCameraRotation = outputRightCameraRotationHandle.asDouble3();
-            //outputRightCameraRotation[0] = doubleData[i++];
-            //outputRightCameraRotation[1] = doubleData[i++];
-            //outputRightCameraRotation[2] = doubleData[i++];
-
-
-            //MDataHandle outputTranslateHandle = block.outputValue( outputTranslate, &status );
-            //MCHECKERROR(status, "Error in block.outputValue for outputTranslate");
-
-            //double3& outputTranslate = outputTranslateHandle.asDouble3();
-            //outputTranslate[0] = doubleData[i++];
-            //outputTranslate[1] = doubleData[i++];
-            //outputTranslate[2] = doubleData[i++];
+            status = rotationsHandle.set(rotationsBuilder);
+            MCHECKERROR(status, "set rotationsBuilder failed\n");
 
             block.setClean( plug );
 
