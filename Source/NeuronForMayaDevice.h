@@ -56,6 +56,7 @@ public:
 
 private:
     static queue<FrameData>    frameBuffur;
+    static FrameData           curFrameData;
     static bool                bRecord;
     static bool                bLive;
 };

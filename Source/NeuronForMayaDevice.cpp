@@ -38,6 +38,8 @@
 #define USERAMDOM
 
 queue<FrameData>    NeuronForMayaDevice::frameBuffur;
+FrameData           NeuronForMayaDevice::curFrameData;
+
 bool    NeuronForMayaDevice::bLive = false;
 bool    NeuronForMayaDevice::bRecord = false;
 
@@ -109,22 +111,19 @@ void NeuronForMayaDevice::threadHandler()
             // add mutex here
             EnterCriticalSection( &NeuronForMayaCmd::critical_sec );
 
-            if(frameBuffur.size() != 0 )
+            //FrameData curData = frameBuffur.front();
+            //frameBuffur.pop();
+
+            frameData->nFrame = curFrameData.nFrame;
+
+            for(UINT32 i = 0; i < 60; ++i )
             {
-                FrameData curData = frameBuffur.front();
-                frameBuffur.pop();
-
-                frameData->nFrame = curData.nFrame;
-
-                for(UINT32 i = 0; i < 60; ++i )
+                for( UINT32 j = 0; j< 6; j++ )
                 {
-                    for( UINT32 j = 0; j< 6; j++ )
-                    {
-                        frameData->data[i][j] = curData.data[i][j];
-                    }
+                    frameData->data[i][j] = curFrameData.data[i][j];
                 }
-                pushThreadData( buffer );
             }
+            pushThreadData( buffer );
             LeaveCriticalSection( &NeuronForMayaCmd::critical_sec );
 
         }
@@ -299,18 +298,28 @@ NeuronForMayaDevice::myFrameDataReceived(void* customedObj, SOCKET_REF sender, B
     
     // push the data for each frame into a queue
     // add mutex 
+    EnterCriticalSection( &NeuronForMayaCmd::critical_sec );
     static int nFrame = 0;
-    FrameData curFrame;
-    curFrame.nFrame = nFrame++;
+    curFrameData.nFrame = nFrame++;
     for(UINT32 i = 0; i < 60; ++i )
     {
         for( UINT32 j = 0; j< 6; j++ )
         {
-            curFrame.data[i][j] = data[i*6+j]; 
+            curFrameData.data[i][j] = data[i*6+j]; 
         }
     }
-    EnterCriticalSection( &NeuronForMayaCmd::critical_sec );
-    frameBuffur.push(curFrame);
+
+
+    //FrameData curFrame;
+    //curFrame.nFrame = nFrame++;
+    //for(UINT32 i = 0; i < 60; ++i )
+    //{
+    //    for( UINT32 j = 0; j< 6; j++ )
+    //    {
+    //        curFrame.data[i][j] = data[i*6+j]; 
+    //    }
+    //}
+    //frameBuffur.push(curFrame);
     LeaveCriticalSection(&NeuronForMayaCmd::critical_sec);
 
 
