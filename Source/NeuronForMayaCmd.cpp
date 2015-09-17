@@ -28,6 +28,8 @@
 
 SOCKET_REF NeuronForMayaCmd::socketInfo = NULL;
 
+CRITICAL_SECTION  NeuronForMayaCmd::critical_sec;
+
 NeuronForMayaCmd::~NeuronForMayaCmd() {}
 
 void* NeuronForMayaCmd::creator()
@@ -65,6 +67,7 @@ MStatus NeuronForMayaCmd::doIt( const MArgList& args )
         BRRegisterCommandDataCallback(NULL, NeuronForMayaDevice::myCommandDataReceived );
         BRRegisterSocketStatusCallback (NULL, NeuronForMayaDevice::mySocketStatusChanged );
 
+        InitializeCriticalSection(&critical_sec);
         socketInfo = BRConnectTo("127.0.0.1", 7001);
         if(socketInfo == NULL )
             MGlobal::displayError("Failed to connect to device.");
@@ -73,7 +76,7 @@ MStatus NeuronForMayaCmd::doIt( const MArgList& args )
     {
         // stop socket
         BRCloseSocket( socketInfo);
- 
+        DeleteCriticalSection(&critical_sec);
     
     }
 

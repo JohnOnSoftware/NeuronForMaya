@@ -1,11 +1,24 @@
 #pragma once
 
 #include <windows.h>
+#include <vector>
 #include "maya/MPxThreadedDeviceNode.h"
 #include "maya/MDagPath.h"
 #include "maya/MFnCamera.h"
 #include <NeuronDataReader.h>
+#include <queue>
+#include <map>
 
+using namespace std;
+
+struct FrameData{
+    int nFrame;
+    float data[60][6];
+};
+
+
+
+//map<string, UINT32> SkeletonMap;
 
 class NeuronForMayaDevice : public MPxThreadedDeviceNode
 {
@@ -64,7 +77,12 @@ public:
 
     static MTypeId		id;
 
+
+
 private:
     static MStatus createOculusAttribute(  MObject& obj, MObject& objX, MObject& objY, MObject& objZ, const MString& longName, const MString& shortName, bool hidden = false );
 
+    static queue<FrameData>    frameBuffur;
+    static bool                bRecord;
+    static bool                bLive;
 };

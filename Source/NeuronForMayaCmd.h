@@ -16,5 +16,7 @@ public:
 private:
     static SOCKET_REF socketInfo;
 
+public:
+    static CRITICAL_SECTION  critical_sec; 
 
 };

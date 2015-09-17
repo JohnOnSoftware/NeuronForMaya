@@ -31,10 +31,14 @@
 #include <maya/MFnStringData.h>
 
 #include "NeuronForMayaDevice.h"
+#include "NeuronForMayaCmd.h"
 
 
 #define USERAMDOM
 
+queue<FrameData>    NeuronForMayaDevice::frameBuffur;
+bool    NeuronForMayaDevice::bLive = false;
+bool    NeuronForMayaDevice::bRecord = false;
 
 MTypeId NeuronForMayaDevice::id( 0x00081051 );
 
@@ -82,7 +86,7 @@ void NeuronForMayaDevice::postConstructor()
 	setRefreshOutputAttributes( attrArray );
 
 	// we'll be reading one set of translate x,y, z's at a time
-	createMemoryPools( 24, 15, sizeof(double));
+	createMemoryPools( 24, 1, sizeof(FrameData));
 }
 
 static double getRandomX()
@@ -119,37 +123,29 @@ void NeuronForMayaDevice::threadHandler()
 
 		beginThreadLoop();
 		{
-			double* doubleData = reinterpret_cast<double*>(buffer.ptr());
+			FrameData* frameData = reinterpret_cast<FrameData*>(buffer.ptr());
 
-            MPoint position[2];
-            MVector viewDir[2];
-            MVector upDir[2];
-            MVector rotation[2];
-            //adapter.getCameraInformation(position, viewDir, upDir, rotation );
+            // add mutex here
+            EnterCriticalSection( &NeuronForMayaCmd::critical_sec );
 
+            if(frameBuffur.size() != 0 )
+            {
+                FrameData curData = frameBuffur.front();
+                frameBuffur.pop();
 
-#ifdef USERAMDOM
-            int i = 0;
-            doubleData[i++] = getRandomX(); doubleData[i++] = getRandomX(); doubleData[i++] = getRandomX();
-            doubleData[i++] = getRandomX(); doubleData[i++] = getRandomX(); doubleData[i++] = getRandomX();
+                frameData->nFrame = curData.nFrame;
 
-            doubleData[i++] = getRandomX(); doubleData[i++] = getRandomX(); doubleData[i++] = getRandomX();
-            doubleData[i++] = getRandomX(); doubleData[i++] = getRandomX(); doubleData[i++] = getRandomX();
+                for(UINT32 i = 0; i < 60; ++i )
+                {
+                    for( UINT32 j = 0; j< 6; j++ )
+                    {
+                        frameData->data[i][j] = curData.data[i][j];
+                    }
+                }
+                pushThreadData( buffer );
+            }
+            LeaveCriticalSection( &NeuronForMayaCmd::critical_sec );
 
-            doubleData[i++] = getRandomX(); doubleData[i++] = getRandomX(); doubleData[i++] = getRandomX();
-
-#else
-            int i = 0;
-            doubleData[i++] = position[0].x; doubleData[i++] = position[0].y; doubleData[i++] = position[0].z;
-            doubleData[i++] = rotation[0].x; doubleData[i++] = rotation[0].y; doubleData[i++] = rotation[0].z;
-
-            doubleData[i++] = position[1].x; doubleData[i++] = position[1].y; doubleData[i++] = position[1].z;
-            doubleData[i++] = rotation[1].x; doubleData[i++] = rotation[1].y; doubleData[i++] = rotation[1].z;
-
-            doubleData[i++] = getRandomX(); doubleData[i++] = getRandomX(); doubleData[i++] = getRandomX();
-
-#endif
-            pushThreadData( buffer );
         }
         endThreadLoop();
     }
@@ -289,54 +285,55 @@ MStatus NeuronForMayaDevice::compute( const MPlug& plug, MDataBlock& block )
         || plug == outputRightCameraRotation || plug == outputRightCameraRotationX || plug == outputRightCameraRotationY || plug == outputRightCameraRotationZ
         )
     {
+        bLive = isLive();
+
         MCharBuffer buffer;
         if ( popThreadData(buffer) )
         {
-            double* doubleData = reinterpret_cast<double*>(buffer.ptr());
+            FrameData* curData = reinterpret_cast<FrameData*>(buffer.ptr());
 
-            int i = 0;
-            MDataHandle outputLeftCameraPositionHandle = block.outputValue( outputLeftCameraPosition, &status );
-            MCHECKERROR(status, "Error in block.outputValue for outputLeftCameraPosition");
+            //int i = 0;
+            //MDataHandle outputLeftCameraPositionHandle = block.outputValue( outputLeftCameraPosition, &status );
+            //MCHECKERROR(status, "Error in block.outputValue for outputLeftCameraPosition");
 
-            double3& outputLeftCameraPosition = outputLeftCameraPositionHandle.asDouble3();
-            outputLeftCameraPosition[0] = doubleData[i++];
-            outputLeftCameraPosition[1] = doubleData[i++];
-            outputLeftCameraPosition[2] = doubleData[i++];
+            //double3& outputLeftCameraPosition = outputLeftCameraPositionHandle.asDouble3();
+            //outputLeftCameraPosition[0] = doubleData[i++];
+            //outputLeftCameraPosition[1] = doubleData[i++];
+            //outputLeftCameraPosition[2] = doubleData[i++];
 
+            //MDataHandle outputLeftCameraRotationHandle = block.outputValue( outputLeftCameraRotation, &status );
+            //MCHECKERROR(status, "Error in block.outputValue for outputLeftCameraRotation");
 
-            MDataHandle outputLeftCameraRotationHandle = block.outputValue( outputLeftCameraRotation, &status );
-            MCHECKERROR(status, "Error in block.outputValue for outputLeftCameraRotation");
-
-            double3& outputLeftCameraRotation = outputLeftCameraRotationHandle.asDouble3();
-            outputLeftCameraRotation[0] = doubleData[i++];
-            outputLeftCameraRotation[1] = doubleData[i++];
-            outputLeftCameraRotation[2] = doubleData[i++];
-
-
-            MDataHandle outputRightCameraPositionHandle = block.outputValue( outputRightCameraPosition, &status );
-            MCHECKERROR(status, "Error in block.outputValue for outputRightCameraPosition");
-
-            double3& outputRightCameraPosition = outputRightCameraPositionHandle.asDouble3();
-            outputRightCameraPosition[0] = doubleData[i++];
-            outputRightCameraPosition[1] = doubleData[i++];
-            outputRightCameraPosition[2] = doubleData[i++];
-
-            MDataHandle outputRightCameraRotationHandle = block.outputValue( outputRightCameraRotation, &status );
-            MCHECKERROR(status, "Error in block.outputValue for outputRightCameraRotation");
-
-            double3& outputRightCameraRotation = outputRightCameraRotationHandle.asDouble3();
-            outputRightCameraRotation[0] = doubleData[i++];
-            outputRightCameraRotation[1] = doubleData[i++];
-            outputRightCameraRotation[2] = doubleData[i++];
+            //double3& outputLeftCameraRotation = outputLeftCameraRotationHandle.asDouble3();
+            //outputLeftCameraRotation[0] = doubleData[i++];
+            //outputLeftCameraRotation[1] = doubleData[i++];
+            //outputLeftCameraRotation[2] = doubleData[i++];
 
 
-            MDataHandle outputTranslateHandle = block.outputValue( outputTranslate, &status );
-            MCHECKERROR(status, "Error in block.outputValue for outputTranslate");
+            //MDataHandle outputRightCameraPositionHandle = block.outputValue( outputRightCameraPosition, &status );
+            //MCHECKERROR(status, "Error in block.outputValue for outputRightCameraPosition");
 
-            double3& outputTranslate = outputTranslateHandle.asDouble3();
-            outputTranslate[0] = doubleData[i++];
-            outputTranslate[1] = doubleData[i++];
-            outputTranslate[2] = doubleData[i++];
+            //double3& outputRightCameraPosition = outputRightCameraPositionHandle.asDouble3();
+            //outputRightCameraPosition[0] = doubleData[i++];
+            //outputRightCameraPosition[1] = doubleData[i++];
+            //outputRightCameraPosition[2] = doubleData[i++];
+
+            //MDataHandle outputRightCameraRotationHandle = block.outputValue( outputRightCameraRotation, &status );
+            //MCHECKERROR(status, "Error in block.outputValue for outputRightCameraRotation");
+
+            //double3& outputRightCameraRotation = outputRightCameraRotationHandle.asDouble3();
+            //outputRightCameraRotation[0] = doubleData[i++];
+            //outputRightCameraRotation[1] = doubleData[i++];
+            //outputRightCameraRotation[2] = doubleData[i++];
+
+
+            //MDataHandle outputTranslateHandle = block.outputValue( outputTranslate, &status );
+            //MCHECKERROR(status, "Error in block.outputValue for outputTranslate");
+
+            //double3& outputTranslate = outputTranslateHandle.asDouble3();
+            //outputTranslate[0] = doubleData[i++];
+            //outputTranslate[1] = doubleData[i++];
+            //outputTranslate[2] = doubleData[i++];
 
             block.setClean( plug );
 
@@ -364,6 +361,31 @@ NeuronForMayaDevice::myCommandDataReceived(void* customedObj, SOCKET_REF sender,
 void 
 NeuronForMayaDevice::myFrameDataReceived(void* customedObj, SOCKET_REF sender, BvhDataHeaderEx* header, float* data)
 {
+    if( !bLive )
+        return;
+
+    BOOL withDisp = header->WithDisp;
+    BOOL withReference = header->WithReference;
+    UINT32 count = header->DataCount;
+    
+    // push the data for each frame into a queue
+    // add mutex 
+    static int nFrame = 0;
+    FrameData curFrame;
+    curFrame.nFrame = nFrame++;
+    for(UINT32 i = 0; i < 60; ++i )
+    {
+        for( UINT32 j = 0; j< 6; j++ )
+        {
+            curFrame.data[i][j] = data[i*6+j]; 
+        }
+    }
+    EnterCriticalSection( &NeuronForMayaCmd::critical_sec );
+    frameBuffur.push(curFrame);
+    LeaveCriticalSection(&NeuronForMayaCmd::critical_sec);
+
+
+
     MGlobal::displayInfo("myFrameDataReceived");
 
 }
