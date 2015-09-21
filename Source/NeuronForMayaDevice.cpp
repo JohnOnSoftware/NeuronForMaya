@@ -1,21 +1,3 @@
-//-
-// ==========================================================================
-// Copyright 2011 Autodesk, Inc. All rights reserved.
-//
-// Use of this software is subject to the terms of the Autodesk
-// license agreement provided at the time of installation or download,
-// or which otherwise accompanies this software in either electronic
-// or hard copy form.
-// ==========================================================================
-//+
-
-// Description:
-// This example demonstrates how to use a secondary thread to generate
-// translate data which controls an object.
-//
-
-
-
 #include <stdlib.h>
 
 #include <maya/MGlobal.h>
@@ -47,6 +29,7 @@ MTypeId NeuronForMayaDevice::id( 0x00081051 );
 
 MObject NeuronForMayaDevice::inputIp;
 MObject NeuronForMayaDevice::inputPort;
+MObject NeuronForMayaDevice::inputRecord;
 
 MObject NeuronForMayaDevice::outputTranslate;
 MObject NeuronForMayaDevice::outputTranslations;
@@ -164,17 +147,21 @@ MStatus NeuronForMayaDevice::initialize()
     tAttr.setWritable(true);
     ADD_ATTRIBUTE(inputIp)
 
-
-    MFnStringData fnStringPort;
-    MObject stringPort = fnStringPort.create("127.0.0.1");
-    inputPort = tAttr.create("inputPort", "ip", MFnData::kString, stringPort, &status);
+    inputPort = numAttr.create("inputPort", "ip", MFnNumericData::kInt, 7001, &status );
  	MCHECKERROR(status, "create input Port");
-    tAttr.setWritable(true);
+    numAttr.setWritable(true);
     ADD_ATTRIBUTE(inputPort)
+
+
+    inputRecord = numAttr.create("record", "ird", MFnNumericData::kBoolean, false, &status );
+    MCHECKERROR(status, "create input Record");
+    numAttr.setWritable(true);
+    ADD_ATTRIBUTE(inputRecord)
 
 
 	outputTranslate = numAttr.create("outputTranslate", "ot", MFnNumericData::k3Float, 0.0, &status);
 	MCHECKERROR(status, "create outputTranslate");
+    numAttr.setHidden(true);
 	ADD_ATTRIBUTE(outputTranslate);
 
 
@@ -228,6 +215,7 @@ MStatus NeuronForMayaDevice::compute( const MPlug& plug, MDataBlock& block )
         if ( popThreadData(buffer) )
         {
             FrameData* curData = reinterpret_cast<FrameData*>(buffer.ptr());
+            printf( "current frame is %d \n ",  curData->nFrame);
             MArrayDataHandle translationsHandle = block.outputArrayValue( outputTranslations, &status );
             MCHECKERROR(status, "Error in block.outputArrayValue for outputTranslations");
 
@@ -321,10 +309,6 @@ NeuronForMayaDevice::myFrameDataReceived(void* customedObj, SOCKET_REF sender, B
     //}
     //frameBuffur.push(curFrame);
     LeaveCriticalSection(&NeuronForMayaCmd::critical_sec);
-
-
-
-    MGlobal::displayInfo("myFrameDataReceived");
 
 }
 

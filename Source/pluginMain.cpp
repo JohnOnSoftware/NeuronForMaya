@@ -42,7 +42,7 @@ MStatus initializePlugin( MObject obj )
         status.perror("failed to registerNode NeuronForMayaDevice");
     }
 
-	status = plugin.registerCommand( "NeuronForMayaCmd", NeuronForMayaCmd::creator );
+	status = plugin.registerCommand( "NeuronForMayaCmd", NeuronForMayaCmd::creator, NeuronForMayaCmd::newSyntax );
 	if (!status) {
 		status.perror("registerCommand");
 		return status;

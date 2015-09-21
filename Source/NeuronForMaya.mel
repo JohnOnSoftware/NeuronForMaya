@@ -344,6 +344,9 @@ global proc createNeuronCap(string $characterNodeName)
 	createUnitconversions($characterNodeName);	
 
 	connectNodes($characterNodeName, $deviceName);
+	
+	NeuronForMayaCmd -s true -dn $deviceName;
+
 }
 
 

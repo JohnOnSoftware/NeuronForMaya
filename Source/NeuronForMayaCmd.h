@@ -7,14 +7,20 @@
 class NeuronForMayaCmd : public MPxCommand
 {
 public:
-					NeuronForMayaCmd() { };
-	virtual			~NeuronForMayaCmd(); 
+    NeuronForMayaCmd() {  mDeviceName=""; mStart=false;};
+    virtual         ~NeuronForMayaCmd(); 
 
-	MStatus     	doIt( const MArgList& args );
-	static void*	creator();
+    MStatus         doIt( const MArgList& args );
+    static void*    creator();
+
+    static MSyntax  newSyntax();
 
 private:
+	MStatus			parseArgs( const MArgList& args );
     static SOCKET_REF socketInfo;
+
+    MString         mDeviceName;
+    bool            mStart;
 
 public:
     static CRITICAL_SECTION  critical_sec; 

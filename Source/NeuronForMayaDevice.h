@@ -44,6 +44,7 @@ public:
 
     static MObject      inputIp;
     static MObject      inputPort;
+    static MObject      inputRecord;
 
     static MObject		outputTranslate;
     static MObject      outputTranslations;
