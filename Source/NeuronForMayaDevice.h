@@ -6,6 +6,7 @@
 #include "maya/MDagPath.h"
 #include "maya/MFnCamera.h"
 #include <NeuronDataReader.h>
+#include <maya/MSpinLock.h>
 #include <queue>
 
 using namespace std;
@@ -46,17 +47,16 @@ public:
     static MObject      inputPort;
     static MObject      inputRecord;
 
-    static MObject		outputTranslate;
+    static MObject      outputTranslate;
     static MObject      outputTranslations;
     static MObject      outputRotations;
 
 
-    static MTypeId		id;
-
-
+    static MTypeId      id;
+    static MSpinLock    spinLock;
 
 private:
-    static queue<FrameData>    frameBuffur;
+    //static queue<FrameData>    frameBuffur;
     static FrameData           curFrameData;
     static bool                bRecord;
     static bool                bLive;

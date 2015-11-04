@@ -16,13 +16,9 @@ public:
     static MSyntax  newSyntax();
 
 private:
-	MStatus			parseArgs( const MArgList& args );
+    MStatus         parseArgs( const MArgList& args );
     static SOCKET_REF socketInfo;
 
     MString         mDeviceName;
     bool            mStart;
-
-public:
-    static CRITICAL_SECTION  critical_sec; 
-
 };

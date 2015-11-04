@@ -1,31 +1,3 @@
-//-
-// ==========================================================================
-// Copyright 1995,2006,2008 Autodesk, Inc. All rights reserved.
-//
-// Use of this software is subject to the terms of the Autodesk
-// license agreement provided at the time of installation or download,
-// or which otherwise accompanies this software in either electronic
-// or hard copy form.
-// ==========================================================================
-//+
-
-////////////////////////////////////////////////////////////////////////////////
-//
-// api_macros.h
-//
-// Description:
-//    Convenience macros for error checking and attribute creation,
-//
-////////////////////////////////////////////////////////////////////////////////
-
-//////////////////////////////////////////////////////////////////////
-//
-// Error checking
-//
-//    MCHECKERROR       - check the status and print the given error message
-//    MCHECKERRORNORET  - same as above but does not return
-//
-//////////////////////////////////////////////////////////////////////
 
 #define MCHECKERROR(STAT,MSG)       \
     if ( MS::kSuccess != STAT ) {   \
