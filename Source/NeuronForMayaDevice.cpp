@@ -231,15 +231,15 @@ MStatus NeuronForMayaDevice::compute( const MPlug& plug, MDataBlock& block )
 }
 
 
-void 
-    NeuronForMayaDevice::myCommandDataReceived(void* customedObj, SOCKET_REF sender, CommandPack* pack, void* data)
-{
-    MGlobal::displayInfo("myCommandDataReceived");
-}
+//void 
+//    NeuronForMayaDevice::myCommandDataReceived(void* customedObj, SOCKET_REF sender, CommandPack* pack, void* data)
+//{
+//    MGlobal::displayInfo("myCommandDataReceived");
+//}
 
 
 void 
-    NeuronForMayaDevice::myFrameDataReceived(void* customedObj, SOCKET_REF sender, BvhDataHeaderEx* header, float* data)
+    NeuronForMayaDevice::myFrameDataReceived(void* customedObj, SOCKET_REF sender, BvhDataHeader* header, float* data)
 {
     if( !bLive )
         return;

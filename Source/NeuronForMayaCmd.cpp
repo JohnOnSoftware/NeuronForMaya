@@ -77,7 +77,7 @@ MStatus NeuronForMayaCmd::doIt( const MArgList& args )
     if( mStart ){
         // to register the 3 callback to fetch data from Neuron
         BRRegisterFrameDataCallback(NULL, NeuronForMayaDevice::myFrameDataReceived );
-        BRRegisterCommandDataCallback(NULL, NeuronForMayaDevice::myCommandDataReceived );
+        //BRRegisterCommandDataCallback(NULL, NeuronForMayaDevice::myCommandDataReceived );
         BRRegisterSocketStatusCallback (NULL, NeuronForMayaDevice::mySocketStatusChanged );
 
         socketInfo = BRConnectTo(const_cast<char*> (ip.asChar()), port);
